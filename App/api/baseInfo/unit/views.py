@@ -4,7 +4,7 @@
 @Author: Mr Bean
 @Date: 2019-05-12 14:31:57
 @LastEditors: Mr Bean
-@LastEditTime: 2019-05-12 17:23:12
+@LastEditTime: 2019-05-13 17:13:26
 @Description: file content
 '''
 from . import Unit
@@ -13,6 +13,7 @@ from logzero import logger
 from flask import request, jsonify, json
 from App import db
 from sqlalchemy import or_
+from App.MyToos import KTools
 
 
 @Unit.route('/')
@@ -40,8 +41,13 @@ def remove():
 
 
 @Unit.route('/update', methods=['POST', 'GET'])
-def db_update():
-    return 'update'
+def update():
+    rsp_json = None
+    if request.method == 'POST':
+        logger.info('Unit.update 接收到一个POST请求!')
+        rqs_data = json.loads(request.data)
+        rsp_json = db_update(rqs_data)
+    return jsonify(rsp_json)
 
 
 @Unit.route('/search', methods=['POST', 'GET'])
@@ -80,28 +86,23 @@ def db_search(rqs_data):
                 or_(mUnit.id.like("%" + search_value + "%"),
                     mUnit.name.like("%" + search_value + "%"),
                     mUnit.pinyin.like("%" + search_value + "%"))).all()
-            return {"status": "success", "rsp_data": toDict(munit)}
+            return {"status": "success", "rsp_data": KTools.dbToDict(munit)}
         except Exception as e:
             error_msg = "向数据库添加数据时,发生异常!"
             logger.error(error_msg)
             print(e)
             return {"status": "error", "msg": error_msg}
 
+def db_update(rqs_data):
 
-def toDict(val):
-    """
-    把查询返回的数据处理成列表
-
-    Parameters:
-        val - 查询返回的数据
-
-    Returns:
-        返回列表(list)
-
-    """
-    result_json = []
-    for item in val:
-        tmp_dict = {"id": item.id, "name": item.name}
-        result_json.append(tmp_dict)
-    return result_json
-    
+    try:
+        munit = mUnit.query.filter_by(id=rqs_data['update_data']['id']).first()
+        munit.name = rqs_data['update_data']['name']
+        munit.pinyin = KTools.cnToPinYin(rqs_data['update_data']['name'])
+        db.session.add(munit)
+        db.session.commit()
+        return {'status': 'success'}
+    except Exception as e:
+        error_msg = '向数据库更新数据时,发生异常!'
+        logger.error(e)
+        return {'status': 'error', 'msg': error_msg}

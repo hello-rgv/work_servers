@@ -2,7 +2,7 @@
 @Author: Mr Bean
 @Date: 2019-05-12 00:44:18
 @LastEditors: Mr Bean
-@LastEditTime: 2019-05-12 00:51:41
+@LastEditTime: 2019-05-13 17:06:58
 @Description: 自定义静态工具类
 '''
 
@@ -35,6 +35,24 @@ class KTools(object):
 
         return result_str
 
+    @staticmethod
+    def dbToDict(val):
+        """
+        把查询返回的数据处理成列表
+
+        Parameters:
+            val - 查询返回的数据
+
+        Returns:
+            返回列表(list)
+
+        """
+        result_json = []
+        for item in val:
+            tmp_dict = {"id": item.id, "name": item.name}
+            result_json.append(tmp_dict)
+        return result_json
+        
 
 if __name__ == '__main__':
     s = '你好(是)?**天*（王）加？ sss+++'
